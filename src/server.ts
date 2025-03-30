@@ -165,18 +165,18 @@ export function getServer(
 
   app.use(timeoutMiddleware(options.timeoutMilliseconds));
 
+  if (options.propagateFrameworkErrors) {
+    const errorHandleMiddleware =
+        createPropagateErrorToClientErrorHandleMiddleware(userFunction);
+    app.use(errorHandleMiddleware);
+  }
+
   // Set up the routes for the user's function
   const requestHandler = wrapUserFunction(userFunction, options.signatureType);
   if (options.signatureType === 'http') {
     app.all('/*', requestHandler);
   } else {
     app.post('/*', requestHandler);
-  }
-
-  if (options.propagateFrameworkErrors) {
-    const errorHandleMiddleware =
-      createPropagateErrorToClientErrorHandleMiddleware(userFunction);
-    app.use(errorHandleMiddleware);
   }
 
   return http.createServer(app);
